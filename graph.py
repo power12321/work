@@ -33,11 +33,13 @@ def plot_all(title, pred_data, orig_data, dates):
 
 print(f"numpy: {np.__version__}")
 print(f"pandas: {pd.__version__}")
-file_path = 'output144hubei.csv'
+#file_path = 'compare/test_predictions.csv'
+file_path = 'output145shenzhen.csv'
 df_pred = pd.read_csv(file_path)
 pred_data = df_pred.iloc[:, 1].values
 
-demo_path = 'hubeidemo_data.csv'
+demo_path = 'shenzhendemo_data.csv'
+
 if os.path.exists(demo_path):
     df_orig = pd.read_csv(demo_path, header=None)
     
