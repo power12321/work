@@ -52,12 +52,6 @@ def example():
     print("(4) Integrating IMFs:")
     print("    cl.integrate(inte_form=[[0,1],[2,3,4],[5,6,7]]) # form 233")
     print("(5) Forecast:")
-    print("    cl.declare_vars(mode='ceemdan_se',form='233',epochs=100) # declare variables for forecast")
-    print("    cl.Hybrid_LSTM(redecom='vmd') # ceemdan_se233_data.csv")
-    print("Also you can try other methods such as:")
-    print("    cl.statistical_tests()")
-    print("    cl.Single_LSTM()")
-    print("    cl.Ensemble_LSTM()")
     print("    cl.Respective_LSTM()")
 
 # Run the example above
@@ -80,7 +74,7 @@ def run_example():
     print("\n(5) Forecast:")
     print("-------------------------------")
     declare_vars(mode='ceemdan_se',form='233') # declare variables for forecast
-    Hybrid_LSTM(redecom='vmd') # ceemdan_se233_data.csv
+    Respective_LSTM() # ceemdan_se233_data.csv
 
 # Run the example above
 def run_predict(series,next_pred=True,epochs=1000):
@@ -1046,127 +1040,7 @@ def Multi_pred(df=None,run_times=10,uni_nor=False,single_lstm=False,ensemble_lst
     print('Please check the logs in: '+LOG_PATH)
 
 
-# 6.Hybrid Forecasting Functions
-# Please use cl.declare_vars() to determine variables.
-#==============================================================================================
-
-def Hybrid_LSTM(df=None,draw=True,enlarge=10,redecom=None,next_pred=False,ahead=1):
-    print('==============================================================================================')
-    print('This is Hybrid LSTM Forecasting running...')
-    print('==============================================================================================')
-    # Check input dataset and load 
-    input_df,file_name = check_dataset(df,input_form='df',use_series=True) # include check_vars()
-    print('Part of Inputting dataset:')
-    print(input_df)
-
-    # Respective method first
-    start = time.time()
-    with HiddenPrints():
-        df_res_pred = Respective_LSTM(df=input_df,draw=False,next_pred=next_pred,show_model=False,ahead=ahead) # include checking
-
-    # initialize some variables
-    global EPOCHS,PATIENCE,FORM
-    EPOCHS,PATIENCE = EPOCHS*enlarge,PATIENCE*enlarge
-    if 'co-imf0' in df_res_pred.columns: col_name = 'co-imf'
-    else: col_name = 'imf'
-    next_trainX_row = df_res_pred[-1:].copy(deep=True)
-    if PERIODS != 0: df_res_pred = df_res_pred[:PERIODS]
-
-    # Load result of the respective method
-    if file_name == '':
-        df_emd = pd.read_csv(PATH+MODE+FORM+'_data.csv',header=0,index_col=0)
-        input_df['sum'] = SERIES.values # add a column for sum data
-    elif 'sum' not in input_df.columns: 
-        df_emd = input_df.copy(deep=True)
-        input_df['sum'] = input_df.T.sum().values 
-    else: df_emd = input_df[input_df.columns.difference(['sum'])].copy(deep=True)
-
-    # Show respective method result
-    print('\nRespective method result:')
-    res_pred = df_res_pred.T.sum().values
-    if PERIODS != 0: df_evl = evl(input_df['sum'][-PERIODS:].values,res_pred,scale='input df') 
-    else: print('Tomorrow is',res_pred,'of '+FORM)
-    print('Hybrid LSTM Forecasting is still running...')
-
-    # VMD-Ensemble LSTM predict for IMF0 or Co-IMF0
-    redecom_name = ''
-    if redecom is not None: # only re-decompse IMF0 or Co-IMF0
-        redecom_name = '_'+redecom
-        with HiddenPrints():
-            df_redecom = re_decom(df=input_df,redecom_mode=redecom,redecom_list=0,draw=False,imfs_num=10)
-            vmd_input = df_redecom[[col_name+'0-rv'+str(i) for i in range(10)]]
-            vmd_input['sum'] = df_emd[col_name+'0']
-            df_vmd = Ensemble_LSTM(df=vmd_input,draw=False,next_pred=next_pred,show_model=False,ahead=ahead)
-        next_trainX_row[col_name+'0'] = df_vmd[-1:].values
-        print('\nVMD method result:')
-        if PERIODS != 0:
-            df_res_pred[col_name+'0'] = df_vmd[0:PERIODS].values
-            res_vmd_pred = df_res_pred.T.sum().values
-            #df_evl = evl(df_emd['imf0'][-PERIODS:],df_vmd,scale='IMF0') # result of IMF0
-            df_evl_vmd = evl(input_df['sum'][-PERIODS:].values,res_vmd_pred,scale='input df') # result of overall
-            end_vmd = time.time()
-            print('Running time: %.3fs'%(end_vmd-start))
-            df_evl_vmd.append(end_vmd-start)
-            df_evl_vmd = pd.DataFrame(df_evl_vmd).T #['R2','RMSE','MAE','MAPE','Time']
-            pd.DataFrame.to_csv(df_evl_vmd,LOG_PATH+file_name+'respective_'+MODE+FORM+redecom_name+'_log.csv',index=False,header=0,mode='a') # log record
-            df_res_add = df_res_pred.copy(deep=True)
-            df_res_add.append(next_trainX_row,ignore_index=True)
-            df_res_add = df_res_add.sum(axis=1)
-            pd.DataFrame.to_csv(df_res_add,LOG_PATH+file_name+'respective_'+MODE+FORM+redecom_name+'_pred.csv') # pred record
-        else:  print('Tomorrow is ',next_trainX_row.T.sum().values,' of '+FORM)
-        print('Hybrid LSTM Forecasting is still running...')
-
-    # Normalize
-    df_res_pred.columns = df_emd.columns
-    rate = df_emd.max()-df_emd.min()
-    tmp_emd = (df_emd-df_emd.min())/rate 
-    tmp_pred = (df_res_pred-df_emd.min())/rate
-
-    # Split and create trainX trainY
-    trainY = input_df['sum'].values.reshape(-1,1)
-    scalarY = MinMaxScaler(feature_range=(0,1)) #sklearn normalize
-    trainY = scalarY.fit_transform(trainY)
-    trainX = tmp_emd.copy(deep=True)
-
-    dataX, dataY = [], []
-    l = len(trainY)-DATE_BACK-PERIODS
-    for i in range(len(trainY)-DATE_BACK):
-        x = np.array(trainX[i:(i+DATE_BACK)])
-        if i < l:
-            a = tmp_emd.values[i+DATE_BACK]
-        else: a = tmp_pred.values[i-l]
-        x = np.row_stack((x,a))
-        dataX.append(x)
-        dataY.append(np.array(trainY[i+DATE_BACK]))
-    next_trainX_row = (next_trainX_row-df_emd.min())/rate
-    next_trainX = np.row_stack((trainX[-DATE_BACK:],next_trainX_row))
-    #if next_pred: print('\nnext_trainX:',next_trainX)
-
-    # Ensemble method 
-    test_pred = LSTM_pred(data=None,show_model=False,draw=draw,ahead=ahead,train_set=[np.array(dataX),np.array(dataY),scalarY,next_trainX],next_pred=next_pred)
-    end = time.time()
-    EPOCHS,PATIENCE = int(EPOCHS/enlarge),int(PATIENCE/enlarge)
-    df_pred = pd.DataFrame(test_pred)
-    if PERIODS == 0: pd.DataFrame.to_csv(df_pred,LOG_PATH+FORM+redecom_name+'_next_pred.csv',mode='a')
-    else:
-        # Evaluate model 
-        pd.DataFrame.to_csv(df_pred,LOG_PATH+file_name+'hybrid_'+MODE+FORM+redecom_name+'_pred.csv')
-        if draw and file_name == '': plot_all('Hybrid',test_pred[0:PERIODS])  # plot chart to campare
-        df_evl = evl(input_df['sum'][-PERIODS:].values,test_pred[0:PERIODS],scale='input df') 
-        print('Running time: %.3fs'%(end-start))
-        df_evl.append(end-start)
-        df_evl = pd.DataFrame(df_evl).T #['R2','RMSE','MAE','MAPE','Time']
-        pd.DataFrame.to_csv(df_evl,LOG_PATH+file_name+'hybrid_'+MODE+FORM+redecom_name+'_log.csv',index=False,header=0,mode='a') # log record
-        print('Hybrid LSTM Forecasting finished, check the logs',LOG_PATH+file_name+'hybrid_'+MODE+FORM+redecom_name+'_log.csv')
-    if next_pred: 
-        print('Running time: %.3fs'%(end-start))
-        print('##################################')
-        print('Today is',input_df['sum'][-1:].values,'but predict as',df_pred[-2:-1].values)
-        print('Next day is',df_pred[-1:].values)
-    return df_pred
-
-
-# 7.Statistical Tests
+# 6.Statistical Tests
 # Please use cl.declare_vars() to determine variables.
 #==============================================================================================
 def statistical_tests(series=None): # total version
