@@ -9,18 +9,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-warnings.filterwarnings("ignore") # Ignore some annoying warnings
+warnings.filterwarnings("ignore") 
 from datetime import datetime
 from PyEMD import EMD,EEMD,CEEMDAN 
 from sampen import sampen2
-
-# Import modules for LSTM prediciton
-# Sklearn
 from sklearn.preprocessing import MinMaxScaler # Normalization
 from sklearn.metrics import r2_score # R2
 from sklearn.metrics import mean_squared_error # MSE
 from sklearn.metrics import mean_absolute_error # MAE
 from sklearn.metrics import mean_absolute_percentage_error # MAPE
+
 # Keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation, Dropout, LSTM
@@ -28,12 +26,6 @@ from tensorflow.keras.layers import GRU,Flatten
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.utils import plot_model 
 from tensorflow.python.client import device_lib
-
-# Statistical tests
-from statsmodels.tsa.stattools import adfuller # adf_test
-from statsmodels.stats.diagnostic import acorr_ljungbox as lb_test # LB_test
-from statsmodels.stats.stattools import jarque_bera as jb_test # JB_test
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf # plot_acf_pacf
 
 # An example
 def example():
@@ -94,10 +86,8 @@ def show_devices():
     print(device_lib.list_local_devices())
 
 # 2.Declare default variables
-#==============================================================================================
 
-# Files variables
-# -------------------------------
+
 # The default dataset saving path: D:\\CEEMDAN_LSTM\\
 PATH = 'D:\\vscode\\code\\work\\'
 # The default figures saving path: D:\\CEEMDAN_LSTM\\figures\\
@@ -110,7 +100,6 @@ DATASET_NAME = 'guanzhou'
 SERIES = None
 
 # Files variables declare functions
-# -------------------------------
 # Declare the path
 # You can also enter the time series data directly by declare_path(series)
 def declare_path(path=PATH,figure_path=FIGURE_PATH,log_path=LOG_PATH,dataset_name=DATASET_NAME,series=SERIES):
@@ -182,7 +171,6 @@ def declare_path(path=PATH,figure_path=FIGURE_PATH,log_path=LOG_PATH,dataset_nam
     return SERIES # pd.Series
 
 # Model variables
-# -------------------------------
 # Mainly determine the decomposition method 
 MODE = 'ceemdan' 
 # Integration form only effective after integration
@@ -237,7 +225,6 @@ def check_vars():
         raise ValueError('FORM is not delcared. Please delcare is as form = 233 or "233".')
 
 # Check dataset input a test one or use the default one
-# -------------------------------
 def check_dataset(dataset,input_form,no_se=False,use_series=False,uni_nor=False): # uni_nor is using unified normalization method or not
     file_name = ''
     # Change MODE
@@ -292,7 +279,7 @@ def check_dataset(dataset,input_form,no_se=False,use_series=False,uni_nor=False)
     return input_dataset,file_name
 
 # Declare LSTM model variables
-# -------------------------------
+
 # The units of LSTM layers and 3 LSTM layers will set to 4*CELLS, 2*CELLS, CELLS.
 CELLS = 32
 # Dropout rate of 3 Dropout layers
@@ -398,7 +385,7 @@ def LSTM_model(shape):
     else: return LSTM_MODEL
 
 # Other variables
-# -------------------------------
+
 # Method for unified normalization only 0,1,2,3
 METHOD = 0 
 
@@ -468,7 +455,7 @@ def emd_decom(series=None,trials=10,re_decom=False,re_imf=0,draw=True):
     return imfs_df # pd.DataFrame
 
 # Sample entropy
-# -------------------------------
+
 # You can also enter the imfs_df directly 
 def sample_entropy(imfs_df=None): # imfs_df is pd.DataFrame
     df_emd,file_name = check_dataset(imfs_df,input_form='df') # include check_vars()
@@ -508,7 +495,7 @@ def sample_entropy(imfs_df=None): # imfs_df is pd.DataFrame
     plt.show()
 
 # Integrate IMFs and Residue
-# -------------------------------
+
 # Residue is the last IMF in dataset
 # inte_form defines the IMFs to be integrated such as [[0,1],[2,3,4],[5,6,7]]
 def integrate(df=None,inte_form=[[0,1],[2,3,4],[5,6,7]]):
@@ -578,7 +565,7 @@ def integrate(df=None,inte_form=[[0,1],[2,3,4],[5,6,7]]):
     if file_name != '': return df_co_emd
 
 # Re-decomposition
-# -------------------------------
+
 # re_list is the IMF for re-decomposition
 def re_decom(df=None,redecom_mode='ceemdan',redecom_list=[0],draw=True,trials=10,imfs_num=10): 
     # Check inputs
@@ -645,7 +632,7 @@ def re_decom(df=None,redecom_mode='ceemdan',redecom_list=[0],draw=True,trials=10
     return df_redecom # pd.DataFrame
 
 # VMD # There are some problems in this module
-# -------------------------------
+
 def vmd_decom(series=None,alpha=2000,tau=0,K=5,DC=0,init=1,tol=1e-7,re_decom=True,re_imf=0,draw=True):
     # Check input
     dataset,file_name = check_dataset(series,input_form='series') # include check_vars()
@@ -696,10 +683,9 @@ def vmd_decom(series=None,alpha=2000,tau=0,K=5,DC=0,init=1,tol=1e-7,re_decom=Tru
 
 
 # 4.LSTM Model Functions
-#==============================================================================================
 
 # Model evaluation function
-# -------------------------------
+
 def evl(y_test, y_pred, scale='0 to 1'): # MSE and MAE are different on different scales
     y_test,y_pred = np.array(y_test).ravel(),np.array(y_pred).ravel()
     r2 = r2_score(y_test, y_pred)
@@ -716,8 +702,7 @@ def evl(y_test, y_pred, scale='0 to 1'): # MSE and MAE are different on differen
     return [r2,rmse,mae,mape]
 
 # DATE_BACK functions for inputting sets
-# -------------------------------
-# IMPORTANT!!! it may cause some error when the input format is wrong.
+
 # Method here is used to determine the Unified normalization, use declare_uni_method(method=METHOD) to declare.
 def create_dateback(df,uni=False,ahead=1):
     # Normalize for DataFrame
@@ -801,7 +786,7 @@ def plot_all(lstm_type,pred_ans):
 
 # Declare LSTM forecasting function
 # Have declared LSTM model variables at Section 0 before
-# -------------------------------
+
 def LSTM_pred(data=None,draw=True,uni=False,show_model=True,train_set=None,next_pred=False,ahead=1):
     # Divide the training and test set
     if train_set is None:
@@ -886,10 +871,10 @@ def LSTM_pred(data=None,draw=True,uni=False,show_model=True,train_set=None,next_
 
 # 5.CEEMDAN-LSTM Forecasting Functions
 # Please use cl.declare_vars() to determine variables.
-#==============================================================================================
+
 
 # Single LSTM Forecasting without CEEMDAN
-# ------------------------------- 
+
 # It uses LSTM directly for prediction wiht input_shape=[DATE_BACK,1]
 def Single_LSTM(series=None,draw=True,uni=False,show_model=True,next_pred=False,ahead=1):
     print('==============================================================================================')
@@ -924,7 +909,7 @@ def Single_LSTM(series=None,draw=True,uni=False,show_model=True,next_pred=False,
     if file_name != '': return df_pred
 
 # Ensemble LSTM Forecasting with 3 Co-IMFs
-# ------------------------------- 
+
 # It uses LSTM directly for prediction wiht input_shape=[DATE_BACK,the number of features]
 def Ensemble_LSTM(df=None,draw=True,uni=False,show_model=True,next_pred=False,ahead=1):
     print('==============================================================================================')
@@ -963,7 +948,7 @@ def Ensemble_LSTM(df=None,draw=True,uni=False,show_model=True,next_pred=False,ah
     return df_pred
 
 # Respective LSTM Forecasting for each Co-IMF
-# ------------------------------- 
+
 # It uses LSTM to predict each IMFs respectively input_shape=[DATE_BACK,1]
 def Respective_LSTM(df=None,draw=True,uni=False,show_model=True,next_pred=False,ahead=1):
     print('==============================================================================================')
@@ -1012,8 +997,6 @@ def Respective_LSTM(df=None,draw=True,uni=False,show_model=True,next_pred=False,
         print('Respective LSTM Forecasting finished, check the logs',LOG_PATH+file_name+'respective_'+MODE+FORM+'_log.csv')
     return df_pred
 
-# Multiple predictions 
-# ------------------------------- 
 # Each Multi_pred() takes long time to run around 1000s unless setting the EPOCHS and n.
 class HiddenPrints: # used to hide the print
     def __enter__(self):
@@ -1034,7 +1017,7 @@ def Multi_pred(df=None,run_times=10,uni_nor=False,single_lstm=False,ensemble_lst
             if single_lstm: Single_LSTM(series=input_series,draw=False,uni=uni_nor,ahead=ahead)
             if ensemble_lstm: Ensemble_LSTM(df=df,draw=False,uni=uni_nor,ahead=ahead)
             if respective_lstm: Respective_LSTM(df=df,draw=False,uni=uni_nor,ahead=ahead)
-            if hybrid_lstm: Hybrid_LSTM(df=df,draw=False,redecom=redecom,ahead=ahead)
     end = time.time()
     print('Multiple predictions completed, taking %.3fs'%(end-start))
     print('Please check the logs in: '+LOG_PATH)
+    
