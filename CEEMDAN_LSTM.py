@@ -19,6 +19,7 @@ from sklearn.metrics import mean_squared_error # MSE
 from sklearn.metrics import mean_absolute_error # MAE
 from sklearn.metrics import mean_absolute_percentage_error # MAPE
 
+
 # Keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation, Dropout, LSTM
@@ -27,46 +28,8 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.utils import plot_model 
 from tensorflow.python.client import device_lib
 
-# An example
-def example():
-    print("Start your first prediction by following steps:")
-    print("check your dataset and use cl.run_example() can directly run the following example around 1000 seconds.")
-    print("##################################")
-    print("(0) Import:")
-    print("    import CEEMDAN_LSTM as cl")
-    print("(1) Declare a path for saving files:")
-    print("    series = cl.declare_path()")
-    print("(2) CEEMDAN decompose:")
-    print("    cl.declare_vars(mode='ceemdan') # set decomposition method")
-    print("    imfs = cl.emd_decom()")
-    print("(3) Sample Entropy:")
-    print("    cl.sample_entropy()")
-    print("(4) Integrating IMFs:")
-    print("    cl.integrate(inte_form=[[0,1],[2,3,4],[5,6,7]]) # form 233")
-    print("(5) Forecast:")
-    print("    cl.Respective_LSTM()")
 
-# Run the example above
-def run_example():
-    print('An example of cl.example() is running around 1000 seconds.')
-    print('##################################')
-    print("\n(1) Declare a path for saving files:")
-    print("-------------------------------")
-    series = declare_path()
-    print("\n(2) CEEMDAN decompose:")
-    print("-------------------------------")
-    declare_vars(mode='ceemdan') # reset to default value
-    imfs = emd_decom()
-    print("\n(3) Sample Entropy:")
-    print("-------------------------------")
-    sample_entropy()
-    print("\n(4) Integrating IMFs:")
-    print("-------------------------------")
-    integrate(inte_form=[[0,1],[2,3,4],[5,6,7]]) # form 233
-    print("\n(5) Forecast:")
-    print("-------------------------------")
-    declare_vars(mode='ceemdan_se',form='233') # declare variables for forecast
-    Respective_LSTM() # ceemdan_se233_data.csv
+
 
 # Run the example above
 def run_predict(series,next_pred=True,epochs=1000):
@@ -79,6 +42,7 @@ def run_predict(series,next_pred=True,epochs=1000):
     EPOCHS,PATIENCE = epochs,int(epochs/10)
     Ensemble_LSTM(df=df_vmd,show_model=False,next_pred=next_pred)
     EPOCHS,PATIENCE = tmp_epochs, tmp_patience
+
 
 # Show Tensorflow running device
 def show_devices():
@@ -338,6 +302,8 @@ def declare_LSTM_MODEL(model=LSTM_MODEL):
     LSTM_MODEL = model
             
 
+
+
 # Build LSTM model
 def LSTM_model(shape):
     if LSTM_MODEL is None:
@@ -395,6 +361,8 @@ def declare_uni_method(method=None):
     global METHOD
     METHOD = method
     print('Unified normalization method (%d) is start using.'%method)
+
+
 
 
 # 3.Decomposition, Sample entropy, Re-decomposition, and Integration
@@ -631,7 +599,8 @@ def re_decom(df=None,redecom_mode='ceemdan',redecom_list=[0],draw=True,trials=10
 
     return df_redecom # pd.DataFrame
 
-# VMD # There are some problems in this module
+
+
 
 def vmd_decom(series=None,alpha=2000,tau=0,K=5,DC=0,init=1,tol=1e-7,re_decom=True,re_imf=0,draw=True):
     # Check input
@@ -682,6 +651,8 @@ def vmd_decom(series=None,alpha=2000,tau=0,K=5,DC=0,init=1,tol=1e-7,re_decom=Tru
     return imfs_df # pd.DataFrame
 
 
+
+
 # 4.LSTM Model Functions
 
 # Model evaluation function
@@ -700,6 +671,8 @@ def evl(y_test, y_pred, scale='0 to 1'): # MSE and MAE are different on differen
     print('MAE:', mae)
     print("MAPE:",mape) # MAPE before normalization may error beacause of negative values
     return [r2,rmse,mae,mape]
+
+
 
 # DATE_BACK functions for inputting sets
 
@@ -763,6 +736,8 @@ def create_dateback(df,uni=False,ahead=1):
         dataY.append(np.array(trainY[i+DATE_BACK+ahead]))
     return np.array(dataX),np.array(dataY),scalarY,np.array(trainX[-DATE_BACK:])
 
+
+
 # Plot original data and forecasting data
 def plot_all(lstm_type,pred_ans):
     # Check and Change
@@ -783,6 +758,9 @@ def plot_all(lstm_type,pred_ans):
     plt.savefig(FIGURE_PATH+lstm_type+' LSTM forecasting results.svg', bbox_inches='tight')
     plt.show()
     return 
+
+
+
 
 # Declare LSTM forecasting function
 # Have declared LSTM model variables at Section 0 before
@@ -869,10 +847,9 @@ def LSTM_pred(data=None,draw=True,uni=False,show_model=True,train_set=None,next_
     return test_pred
 
 
+
 # 5.CEEMDAN-LSTM Forecasting Functions
 # Please use cl.declare_vars() to determine variables.
-
-
 # Single LSTM Forecasting without CEEMDAN
 
 # It uses LSTM directly for prediction wiht input_shape=[DATE_BACK,1]
@@ -907,6 +884,7 @@ def Single_LSTM(series=None,draw=True,uni=False,show_model=True,next_pred=False,
         print('Today is',input_series[-1:].values,'but predict as',df_pred[-2:-1].values)
         print('Next day is',df_pred[-1:].values)
     if file_name != '': return df_pred
+
 
 # Ensemble LSTM Forecasting with 3 Co-IMFs
 
