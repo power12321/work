@@ -59,7 +59,7 @@ FIGURE_PATH = PATH+'figures\\'
 # The default logs and output saving path: D:\\CEEMDAN_LSTM\\subset\\
 LOG_PATH = PATH+'subset\\'
 # The default dataset name of a csv file: cl_sample_dataset.csv (must be csv file)
-DATASET_NAME = 'guanzhou'
+DATASET_NAME = 'CEA'
 # The default time series dataset. Load from DATASET_NAME or input a pd.Series.
 SERIES = None
 
@@ -998,4 +998,3 @@ def Multi_pred(df=None,run_times=10,uni_nor=False,single_lstm=False,ensemble_lst
     end = time.time()
     print('Multiple predictions completed, taking %.3fs'%(end-start))
     print('Please check the logs in: '+LOG_PATH)
-    
