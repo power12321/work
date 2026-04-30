@@ -59,7 +59,7 @@ FIGURE_PATH = PATH+'figures\\'
 # The default logs and output saving path: D:\\CEEMDAN_LSTM\\subset\\
 LOG_PATH = PATH+'subset\\'
 # The default dataset name of a csv file: cl_sample_dataset.csv (must be csv file)
-DATASET_NAME = 'CEA'
+DATASET_NAME = 'shenzhen'
 # The default time series dataset. Load from DATASET_NAME or input a pd.Series.
 SERIES = None
 
